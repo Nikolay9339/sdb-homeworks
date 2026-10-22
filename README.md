@@ -1,64 +1,91 @@
-# Домашнее задание к занятию «ELK»
+# Домашнее задание: Установка и настройка кластера RabbitMQ
 
-**Захарян Николай Артурович** 
+**Выполнил:** Захарян Николай  
+  
+**Дата:** 22 октября 2026 г.
 
-## Задание 1. Elasticsearch
+---
 
-**1. Команда проверки состояния кластера:**
+## Задание 1. Установка RabbitMQ
 
-curl -X GET 'localhost:9200/_cluster/health?pretty'
+**Выполненные действия:**
+1. Создана виртуальная машина в VirtualBox (ОС: Ubuntu 22.04/24.04).
+2. Установлен пакет `rabbitmq-server`.
+3. Включен плагин управления: `sudo rabbitmq-plugins enable rabbitmq_management`.
+4. Создан пользователь `admin` с правами администратора для доступа к веб-интерфейсу по IP-адресу.
 
-<img width="738" height="348" alt="2026-10-02_09-58-49" src="https://github.com/user-attachments/assets/75371404-47eb-438f-a3d0-ecd6728f1112" />
+**Результат:**
+Веб-интерфейс RabbitMQ успешно запущен и доступен по адресу `http://<IP_адрес_VM>:15672`.
 
-## Задание 2. Kibana
+![Веб-интерфейс RabbitMQ Overview](screenshots/task1_overview.png)  
+<img width="1920" height="792" alt="2026-10-02_13-49-31" src="https://github.com/user-attachments/assets/5c9cb16a-072b-4d7f-b9eb-bbc2fdddef64" />
 
-**1. URL для доступа:**
-http://<IP_ВАШЕГО_СЕРВЕРА>:5601/app/dev_tools#/console
 
-**2. Выполненный запрос в Dev Tools:**
-GET /_cluster/health?pretty
+---
 
-<img width="1920" height="496" alt="2026-10-02_11-31-40" src="https://github.com/user-attachments/assets/272b6b81-59a1-4281-97d4-68c0a38f7d2a" />
+## Задание 2. Отправка и получение сообщений
 
-## Задание 3. Logstash
+**Использованные скрипты:**
 
-**1. Фрагмент конфигурации Logstash (logstash.conf):**
+`producer.py`:
+```python
+import pika
 
-input {
-  file {
-    path => "/var/log/nginx/access.log"
-    start_position => "beginning"
-    sincedb_path => "/dev/null"
-  }
-}
-filter {
-  grok {
-    match => { "message" => "%{COMBINEDAPACHELOG}" }
-  }
-}
-output {
-  elasticsearch {
-    hosts => ["http://elasticsearch:9200"]
-    index => "nginx-logs-%{+YYYY.MM.dd}"
-  }
-}
+credentials = pika.PlainCredentials('admin', 'admin')
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+    host='192.168.56.10', # Заменен localhost на IP виртуальной машины
+    credentials=credentials
+))
+channel = connection.channel()
+channel.queue_declare(queue='hello')
+channel.basic_publish(exchange='', routing_key='hello', body='Hello RabbitMQ!')
+print(" [x] Sent 'Hello RabbitMQ!'")
+connection.close()
 
-<img width="1920" height="739" alt="2026-10-02_11-38-02" src="https://github.com/user-attachments/assets/0be62da7-f841-402d-a855-ba235960801d" />
 
-## Задание 4. Filebeat
+`consumer.py`:
+```python
+import pika
 
-**1. Фрагмент конфигурации Filebeat (filebeat.yml):**
+credentials = pika.PlainCredentials('admin', 'admin')
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+    host='192.168.56.10', 
+    credentials=credentials
+))
+channel = connection.channel()
+channel.queue_declare(queue='hello')
 
-filebeat.inputs:
-- type: log
-  enabled: true
-  paths:
-    - /var/log/nginx/access.log
+def callback(ch, method, properties, body):
+    print(f" [x] Received {body.decode()}")
 
-output.elasticsearch:
-  hosts: ["http://elasticsearch:9200"]
-  indices:
-    - index: "filebeat-nginx-logs-%{+yyyy.MM.dd}"
+channel.basic_consume(queue='hello', on_message_callback=callback, auto_ack=True)
+print(' [*] Waiting for messages. To exit press CTRL+C')
+channel.start_consuming()
 
-<img width="1920" height="898" alt="2026-10-02_11-43-18" src="https://github.com/user-attachments/assets/1816cb3f-bf64-44a6-aa3c-4015a55b9a35" />
+## Задание 3. Подготовка HA кластера
 
+Выполненные действия:
+Созданы две ВМ: rmq01 (192.168.56.10) и rmq02 (192.168.56.11).
+В /etc/hosts на обеих машинах добавлены записи для разрешения имен.
+Синхронизирован файл .erlang.cookie.
+Нода rmq02 присоединена к кластеру rmq01.
+Создана политика высокой доступности:
+sudo rabbitmqctl set_policy ha-all "^" '{"ha-mode":"all"}'
+
+<img width="463" height="89" alt="2026-10-02_14-02-42" src="https://github.com/user-attachments/assets/af798461-e9eb-49cb-905b-6e8f991ca6e5" />
+
+<img width="1273" height="799" alt="2026-10-21_15-01-56" src="https://github.com/user-attachments/assets/b1ee21f6-c502-4ce2-948a-9ebe4e5cc734" />
+
+<img width="1275" height="723" alt="2026-10-21_16-41-25" src="https://github.com/user-attachments/assets/a87f4d37-49a3-485c-bf53-cba7e7054897" />
+
+<img width="598" height="109" alt="2026-10-21_16-44-07" src="https://github.com/user-attachments/assets/267ff950-bda8-432b-90e3-cb33ab4e2e3b" />
+
+<img width="800" height="535" alt="2026-10-22_17-14-23" src="https://github.com/user-attachments/assets/3e0ca000-10b8-4af1-923e-17cbc85d4c6d" />
+
+<img width="813" height="578" alt="2026-10-22_17-15-06" src="https://github.com/user-attachments/assets/553f67e7-ba91-450c-beb6-9b12ec6d92db" />
+
+<img width="1053" height="180" alt="2026-10-22_17-23-59" src="https://github.com/user-attachments/assets/eda456f0-ff44-4e6b-869f-bfdfc6f08209" />
+
+<img width="1199" height="716" alt="2026-10-22_17-21-48" src="https://github.com/user-attachments/assets/cf8fa87e-af8d-49ae-9537-4d3433bba12d" />
+
+<img width="806" height="532" alt="2026-10-22_17-33-41" src="https://github.com/user-attachments/assets/ecfceae5-3cc1-4d5f-8896-6feb77d76d26" />
