@@ -1,89 +1,56 @@
-# Домашнее задание: Установка и настройка кластера RabbitMQ
-
-**Выполнил:** Захарян Николай  
-  
-**Дата:** 22 октября 2026 г.
+# Домашнее задание: Базы данных MySQL и SQL-запросы
+**Студент:** Захарян Николай Артурович
 
 ---
 
-## Задание 1. Установка RabbitMQ
+## Задание 1. Настройка пользователя и восстановление базы Sakila
+*(Сюда вставьте скриншоты из Задания 1.3, 1.5 и 1.8, как показано ниже)*
 
-**Выполненные действия:**
-1. Создана виртуальная машина в VirtualBox (ОС: Ubuntu 22.04/24.04).
-2. Установлен пакет `rabbitmq-server`.
-3. Включен плагин управления: `sudo rabbitmq-plugins enable rabbitmq_management`.
-4. Создан пользователь `admin` с правами администратора для доступа к веб-интерфейсу по IP-адресу.
+**Скриншот списка пользователей (1.3):**
+![Список пользователей](screenshots/1-3-users.png)
 
-**Результат:**
-Веб-интерфейс RabbitMQ успешно запущен и доступен по адресу `http://<IP_адрес_VM>:15672`.
+**Скриншот прав пользователя sys_temp (1.5):**
+![Права sys_temp](screenshots/1-5-grants.png)
 
-![Веб-интерфейс RabbitMQ Overview](screenshots/task1_overview.png)  
-<img width="1920" height="792" alt="2026-10-02_13-49-31" src="https://github.com/user-attachments/assets/5c9cb16a-072b-4d7f-b9eb-bbc2fdddef64" />
-
-
-<img width="463" height="89" alt="2026-10-02_14-02-42" src="https://github.com/user-attachments/assets/af798461-e9eb-49cb-905b-6e8f991ca6e5" />
-
-<img width="1273" height="799" alt="2026-10-21_15-01-56" src="https://github.com/user-attachments/assets/b1ee21f6-c502-4ce2-948a-9ebe4e5cc734" />
-
-<img width="1275" height="723" alt="2026-10-21_16-41-25" src="https://github.com/user-attachments/assets/a87f4d37-49a3-485c-bf53-cba7e7054897" />
-
-<img width="598" height="109" alt="2026-10-21_16-44-07" src="https://github.com/user-attachments/assets/267ff950-bda8-432b-90e3-cb33ab4e2e3b" />
-
-<img width="800" height="535" alt="2026-10-22_17-14-23" src="https://github.com/user-attachments/assets/3e0ca000-10b8-4af1-923e-17cbc85d4c6d" />
-
-<img width="813" height="578" alt="2026-10-22_17-15-06" src="https://github.com/user-attachments/assets/553f67e7-ba91-450c-beb6-9b12ec6d92db" />
-
-<img width="1053" height="180" alt="2026-10-22_17-23-59" src="https://github.com/user-attachments/assets/eda456f0-ff44-4e6b-869f-bfdfc6f08209" />
-
-## Задание 2. Отправка и получение сообщений
-
-producer.py
-```python
-import pika
-
-credentials = pika.PlainCredentials('admin', 'admin')
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-    host='192.168.56.10', # Заменен localhost на IP виртуальной машины
-    credentials=credentials
-))
-channel = connection.channel()
-channel.queue_declare(queue='hello')
-channel.basic_publish(exchange='', routing_key='hello', body='Hello RabbitMQ!')
-print(" [x] Sent 'Hello RabbitMQ!'")
-connection.close()
-
-
-`consumer.py`:
-```python
-import pika
-
-credentials = pika.PlainCredentials('admin', 'admin')
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-    host='192.168.56.10', 
-    credentials=credentials
-))
-channel = connection.channel()
-channel.queue_declare(queue='hello')
-
-def callback(ch, method, properties, body):
-    print(f" [x] Received {body.decode()}")
-
-channel.basic_consume(queue='hello', on_message_callback=callback, auto_ack=True)
-print(' [*] Waiting for messages. To exit press CTRL+C')
-channel.start_consuming():
+**Скриншот списка таблиц базы sakila (1.8):**
+![Таблицы sakila](screenshots/1-8-tables.png)
 
 ---
 
-## Задание 3. Подготовка HA кластера
+## Задание 2. Таблица первичных ключей
+| Название таблицы | Название первичного ключа |
+|------------------|---------------------------|
+| actor            | actor_id                  |
+| address          | address_id                |
+| category         | category_id               |
+| city             | city_id                   |
+| country          | country_id                |
+| customer         | customer_id               |
+| film             | film_id                   |
+| film_actor       | actor_id, film_id         |
+| film_category    | film_id, category_id      |
+| film_text        | film_id                   |
+| inventory        | inventory_id              |
+| language         | language_id               |
+| payment          | payment_id                |
+| rental           | rental_id                 |
+| staff            | staff_id                  |
+| store            | store_id                  |
 
-Выполненные действия:
-Созданы две ВМ: rmq01 (192.168.56.10) и rmq02 (192.168.56.11).
-В /etc/hosts на обеих машинах добавлены записи для разрешения имен.
-Синхронизирован файл .erlang.cookie.
-Нода rmq02 присоединена к кластеру rmq01.
-Создана политика высокой доступности:
-sudo rabbitmqctl set_policy ha-all "^" '{"ha-mode":"all"}'
+---
 
-<img width="1199" height="716" alt="2026-10-22_17-21-48" src="https://github.com/user-attachments/assets/cf8fa87e-af8d-49ae-9537-4d3433bba12d" />
+## Задание 3. Базовые SQL-запросы
 
-<img width="806" height="532" alt="2026-10-22_17-33-41" src="https://github.com/user-attachments/assets/ecfceae5-3cc1-4d5f-8896-6feb77d76d26" />
+### 1. Уникальные районы (начинаются на K, заканчиваются на a, без пробелов)
+```sql
+SELECT DISTINCT district
+FROM address
+WHERE district LIKE 'K%a' 
+  AND district NOT LIKE '% %';
+---
+
+<img width="809" height="618" alt="2026-10-23_13-57-49" src="https://github.com/user-attachments/assets/7c0f2c00-c750-4710-8766-ecb04a03e874" />
+<img width="525" height="382" alt="2026-10-23_14-05-13" src="https://github.com/user-attachments/assets/36ec0ce5-0d44-4133-8f9f-41f799dab7b8" />
+<img width="803" height="449" alt="2026-10-23_14-18-17" src="https://github.com/user-attachments/assets/9361f5fc-eae2-46d9-b7ac-b9e32064a171" />
+<img width="806" height="622" alt="2026-10-23_14-19-53" src="https://github.com/user-attachments/assets/6562a7c4-19c2-4739-aba0-11bc59a32062" />
+<img width="803" height="250" alt="2026-10-23_14-19-05" src="https://github.com/user-attachments/assets/dc7bf987-cb99-4675-8ce2-e968818b4ebc" />
