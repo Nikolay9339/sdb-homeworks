@@ -4,16 +4,14 @@
 ---
 
 ## Задание 1. Настройка пользователя и восстановление базы Sakila
-*(Сюда вставьте скриншоты из Задания 1.3, 1.5 и 1.8, как показано ниже)*
 
-**Скриншот списка пользователей (1.3):**
-![Список пользователей](screenshots/1-3-users.png)
 
-**Скриншот прав пользователя sys_temp (1.5):**
-![Права sys_temp](screenshots/1-5-grants.png)
-
-**Скриншот списка таблиц базы sakila (1.8):**
-![Таблицы sakila](screenshots/1-8-tables.png)
+**Скриншоты:**
+<img width="809" height="618" alt="2026-10-23_13-57-49" src="https://github.com/user-attachments/assets/a59d5e74-8e27-4796-93ee-96ec65f53c22" />
+<img width="525" height="382" alt="2026-10-23_14-05-13" src="https://github.com/user-attachments/assets/de39f9b1-5196-4efb-b15b-f95b05327f6f" />
+<img width="803" height="449" alt="2026-10-23_14-18-17" src="https://github.com/user-attachments/assets/37411da4-a609-4a05-aaf0-00cabc05a5b4" />
+<img width="806" height="622" alt="2026-10-23_14-19-53" src="https://github.com/user-attachments/assets/6b65a34e-15a1-46b0-84ef-83fad219f023" />
+<img width="803" height="250" alt="2026-10-23_14-19-05" src="https://github.com/user-attachments/assets/52f1d7d5-307f-442b-8439-c021fd45d190" />
 
 ---
 
@@ -47,10 +45,4 @@ SELECT DISTINCT district
 FROM address
 WHERE district LIKE 'K%a' 
   AND district NOT LIKE '% %';
----
 
-<img width="809" height="618" alt="2026-10-23_13-57-49" src="https://github.com/user-attachments/assets/7c0f2c00-c750-4710-8766-ecb04a03e874" />
-<img width="525" height="382" alt="2026-10-23_14-05-13" src="https://github.com/user-attachments/assets/36ec0ce5-0d44-4133-8f9f-41f799dab7b8" />
-<img width="803" height="449" alt="2026-10-23_14-18-17" src="https://github.com/user-attachments/assets/9361f5fc-eae2-46d9-b7ac-b9e32064a171" />
-<img width="806" height="622" alt="2026-10-23_14-19-53" src="https://github.com/user-attachments/assets/6562a7c4-19c2-4739-aba0-11bc59a32062" />
-<img width="803" height="250" alt="2026-10-23_14-19-05" src="https://github.com/user-attachments/assets/dc7bf987-cb99-4675-8ce2-e968818b4ebc" />
